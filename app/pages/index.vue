@@ -6,14 +6,13 @@
       </div>
       <form>
         <div class="form-content">
-          <span>ユーザーID</span>
-          <el-input placeholder v-model="formData.id" />
+          <span>ユーザー ID</span>
+          <el-input placeholder="" v-model="formData.id" />
         </div>
         <div class="form-content">
           <el-checkbox v-model="isCreateMode">アカウントを作成する</el-checkbox>
         </div>
         <div class="text-right">
-          <!-- <button @click="handleClickSubmit"></button> -->
           <el-button type="primary" @click="handleClickSubmit">{{buttonText}}</el-button>
         </div>
       </form>
@@ -22,79 +21,70 @@
 </template>
 
 <script>
-import { mapGetters, mapActions} from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import Cookies from 'universal-cookie'
-
 export default {
   asyncData({ redirect, store }) {
+    console.log('リダイレクト処理')
     if (store.getters['user']) {
       redirect('/posts/')
     }
     return {
       isCreateMode: false,
       formData: {
-        id: ""
-      },
-      cookie: new Cookies()
+        id: ''
+      }
     }
   },
   computed: {
     buttonText() {
-      return this.isCreateMode ? "新規登録" : "ログイン";
+      return this.isCreateMode ? '新規登録' : 'ログイン'
     },
     ...mapGetters(['user'])
   },
   methods: {
-    handleClickSubmit() {
+    async handleClickSubmit() {
+      const cookies = new Cookies()
       if (this.isCreateMode) {
-        this.clickRegister()
+        try {
+          await this.register({ ...this.formData })
+          this.$notify({
+            type: 'success',
+            title: 'アカウント作成完了',
+            message: `${this.formData.id} として登録しました`,
+            position: 'bottom-right',
+            duration: 1000
+          })
+          cookies.set('user', JSON.stringify(this.user))
+          this.$router.push('/posts/')
+        } catch (e) {
+          this.$notify.error({
+            title: 'アカウント作成失敗',
+            message: '既に登録されているか、不正なユーザー ID です',
+            position: 'bottom-right',
+            duration: 1000
+          })
+        }
       } else {
-        this.clickLogin()
-      }
-    },
-    async clickLogin() {
-      const cookies = new Cookies()
-      try {
-        await this.login({ ...this.formData })
-        this.$notify({
-          type: 'success',
-          title: 'ログイン成功',
-          message: `${this.formData.id}としてログインしました`,
-          position: 'bottom-right',
-          duration: 1000
-        })
-        cookies.set('user', JSON.stringify(this.user))
-      } catch (e) {
-        console.log(e)
-        this.$notify({
-          title: 'ログイン失敗',
-          message: '不正なユーザー ID です',
-          position: 'bottom-right',
-          duration: 1000
-        })
-      }
-    },
-    async clickRegister() {
-      const cookies = new Cookies()
-      try {
-        await this.register({ ...this.formData })
-        this.$notify({
-          type: 'success',
-          title: 'アカウント作成完了',
-          message: `${this.formData.id}として登録しました`,
-          position: 'bottom-right',
-          duration: 1000
-        })
-        cookies.set('user', JSON.stringify(this.user))
-        this.$router.push('/posts/')
-      } catch (e) {
-        console.log(e)
-        this.$notify.error({
-          title: 'アカウント作成失敗',
-          message: '既に登録されているか、不正なユーザーIDです',
-          position: 'bottom-right',
-          duration: 1000
-        })
+        try {
+          await this.login({ ...this.formData })
+          this.$notify({
+            type: 'success',
+            title: 'ログイン成功',
+            message: `${this.formData.id} としてログインしました`,
+            position: 'bottom-right',
+            duration: 1000
+          })
+          cookies.set('user', JSON.stringify(this.user))
+          this.$router.push('/posts/')
+        } catch (e) {
+          this.$notify.error({
+            title: 'ログイン失敗',
+            message: '不正なユーザー ID です',
+            position: 'bottom-right',
+            duration: 1000
+          })
+        }
       }
     },
     ...mapActions(['login', 'register'])

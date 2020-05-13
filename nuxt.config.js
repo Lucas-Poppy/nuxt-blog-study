@@ -33,14 +33,14 @@ export default {
   /*
    ** Customize the progress-bar color
    */
-  loading: {
-    color: '#fff'
-  },
+  loading: { color: '#409EFF' },
   /*
    ** Global CSS
    */
   css: [
-    'element-ui/lib/theme-chalk/index.css'
+    'element-ui/lib/theme-chalk/reset.css',
+    'element-ui/lib/theme-chalk/index.css',
+    '~/assets/common.css'
   ],
   /*
    ** Plugins to load before mounting the App
